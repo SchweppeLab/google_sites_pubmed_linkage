@@ -1,0 +1,54 @@
+		<style>
+			.loader {
+				border: 16px solid #f3f3f3; /* Light grey */
+				border-top: 16px solid #3498db; /* Blue */
+				border-bottom: 16px solid #3498db; /* Blue */
+				border-radius: 50%;
+				width: 120px;
+				height: 120px;
+				animation: spin 2s linear infinite;
+				position:fixed;
+				left: 50%;
+				border-image: linear-gradient(to right, darkblue, darkorchid) 1
+			}
+			@keyframes spin {
+			  0% { transform: rotate(0deg); }
+			  100% { transform: rotate(360deg); }
+			}
+		</style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+		<script type="text/javascript">
+			
+      let authorName = "ENTER YOUR NAME STRING HERE";
+      
+			let pmidUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + authorName + "[auth]&retmode=json&retmax=500";
+			let citationBaseurl = "https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=citation&id=";
+
+			let resp = $.getJSON(pmidUrl,function( jsonResponse, listFormat = true ) {
+				console.log("id list acquired");
+				
+				$( "<ol/>", {
+					"class": "citationsList",
+					style: "font-family: sans-serif;",
+					html: ""
+				}).appendTo( "body" );
+				
+				let joinedPmids = jsonResponse.esearchresult.idlist.join();
+				
+				let citationResp = $.getJSON(citationBaseurl + joinedPmids,function( citationJson ) {
+					$.each(citationJson, function(citKey, citVal){
+						console.log(citKey);
+						console.log(citVal.nlm.format);
+						if(listFormat){
+							$( "<li/>", {
+								"class": "citation",
+								style: "margin-bottom: 5px;",
+								id: citKey,
+								html: "<i>" + citVal.nlm.format.replace(/(\.)(.*?)(\.)/i, '$1</i><b>$2</b>$3')
+							}).appendTo( ".citationsList" );
+						}
+					});
+				}).fail(function(){ console.log("failed " + pmid)}).done(function(){$(".loader").css("display","none")});
+			});
+		</script>
+		<div class="loader"></div>
